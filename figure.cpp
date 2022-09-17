@@ -16,7 +16,7 @@ void antidron_test_task::board::add_figure(const pos_t& pos)
 
 pos_t board::new_random_pos(int i) const
 {
-	std::rand
+	//std::rand
 	return pos_t();
 }
 
