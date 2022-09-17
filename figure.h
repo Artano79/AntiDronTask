@@ -41,6 +41,8 @@ namespace antidron_test_task
 		//constant reference on figure
 		const figure& get_figure(int i) const;
 
+		void print() const;
+
 	private:
 		std::vector<figure> figures_;
 		std::mutex mut;

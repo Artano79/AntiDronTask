@@ -70,11 +70,13 @@ int main()
 		board &b = board::getInstance();
 	
 		//Initial positions of figures
-		std::array<pos_t, figures_count> initial_pos{ { {0,0}, {1,1}, {0,0}, {0,0}, {0,0} } };
+		std::array<pos_t, figures_count> initial_pos{ { {0,0}, {1,1}, {3,7}, {6,2}, {1,0} } };
 	
 		//Creating figures on board
 		for (pos_t& pos : initial_pos)
 			b.add_figure(pos);
+
+		b.print();
 
 		//Start threads
 		std::list<std::thread> threads;
