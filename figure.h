@@ -12,6 +12,7 @@ namespace antidron_test_task
 	public:
 		figure(const pos_t& pos) { pos_ = pos; };
 		const pos_t get_pos() const { return pos_; }
+		void set_pos(const pos_t& pos) {pos_ = pos;};
 	private:
 		pos_t pos_;
 	};
@@ -36,7 +37,7 @@ namespace antidron_test_task
 		pos_t new_random_pos(int i) const;
 
 		//Check - is way blocked by other figures
-		bool try_to_move_to(int figure, const pos_t& dest_pos);
+		bool try_to_move_to(int i, const pos_t& dest_pos);
 		
 		//constant reference on figure
 		const figure& get_figure(int i) const;
@@ -45,7 +46,7 @@ namespace antidron_test_task
 
 	private:
 		std::vector<figure> figures_;
-		std::mutex mut;
+		mutable std::mutex mut_;
 
 	};
 }
