@@ -38,9 +38,6 @@ pos_t board::new_random_pos(fig_index idx) const
 		result.y_ = rnd14 < f.get_y() ? rnd14 : rnd14 + 1;
 	}
 
-	//std::cout << "[" << f.get_x() << ":" << f.get_y() <<  "]" << " => ";
-	//std::cout << "[" << result.x_ << ":" << result.y_ <<  "]" << std::endl;
-
 	if(f.get_x() == result.x_ && f.get_y() == result.y_)
 		throw std::runtime_error("Bad new pos");
 
@@ -56,6 +53,11 @@ board::fig_index board::try_to_move_to(fig_index idx, int x, int y)
 	if(!is_horizontal && f.get_x() != x)
 		throw std::runtime_error("Bad move");
 	
+	std::cout << "Fig " << idx << " ";
+	std::cout << "[" << f.get_x() << ":" << f.get_y() <<  "]" << " => ";
+	std::cout << "[" << x << ":" << y <<  "] ";
+
+
 	//Перебираем все фигуры, кроме той что бы двигаем...
 	for(fig_index jdx = 0; jdx < figures_.size(); ++jdx){
 		if(jdx == idx)
@@ -85,6 +87,7 @@ board::fig_index board::try_to_move_to(fig_index idx, int x, int y)
 
 		if(fig_pos >= left && fig_pos <= right)
 		{
+			std::cout << "FAILED. Blocked by Fig: " << jdx << std::endl;
 			//фигура с индексом jdx блокирует путь
 			return jdx;
 		}
@@ -93,6 +96,7 @@ board::fig_index board::try_to_move_to(fig_index idx, int x, int y)
 	//Блокирующих фигур не найдено. 
 	//внутри будет взведен condition_variable, чтобы оповестить фигуры, которые возможно 
 	//ждут что данная фигура разблокирует и путь
+	std::cout << "SUCCESS." << std::endl;
 	f.set_pos(x,y);
 
 	//Возращаем невалидный индекс

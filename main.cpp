@@ -94,7 +94,8 @@ void figure_thread_func(board::fig_index index)
 			int blocked_fig_turn;
 			
 			//Момент времени до коорого мы ждем, пока проход не разблокируется
-			const time_point until_time = std::chrono::high_resolution_clock::now() + milliseconds(5000);
+			const time_point start_time = std::chrono::high_resolution_clock::now();
+			const time_point until_time = start_time + milliseconds(5000);
 			
 			
 			while(true){
@@ -118,10 +119,18 @@ void figure_thread_func(board::fig_index index)
 				//Функция ждет, пока блокирующпя фигура не совершит ход (внутри проверяется изменение ее номера хода)
 				bool wait_result = b.wait_while_figure_make_turn(blocked_fig_idx, blocked_fig_turn, until_time);
 				
-				//Полученный результат false, если вышло время. Переходим к следующему ходу (счетчик хода не увеличится)
-				if(!wait_result)
-					break;
+				const time_point now_time = std::chrono::high_resolution_clock::now();
+				std::cout << "Fig " << index << " waked up " << std::chrono::duration_cast<milliseconds>(now_time - start_time).count() << "ms";
 
+				//Полученный результат false, если вышло время. Переходим к сле<дующему ходу (счетчик хода не увеличится)
+				if(!wait_result)
+				{
+					std::lock_guard lk(turn_mutex);
+					std::cout << "Fig " << index << " waked up by TIMEOUT." << std::endl;
+					break;
+				}
+
+				std::cout << " waked up by Other Figure." << std::endl;
 				//Если полученный результат был положительным, зановой пытаемся перемстить фигуру 
 			}
 		}
