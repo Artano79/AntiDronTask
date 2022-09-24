@@ -29,6 +29,17 @@ int main()
 {
 	try
 	{
+		/*{
+			board &b = board::getInstance();
+			//Начальные позиции фигур в формате {x,y}
+			std::array<pos_t, figures_count> initial_pos{ { {2,1}, {2,3}, {1,2}, {3,2}, {2,2} } };
+			//std::array<pos_t, figures_count> initial_pos{ { {1,1}, {2,1}, {3,7}, {6,2}, {1,0} } };
+			for (auto& pos : initial_pos)
+				b.add_figure(pos);
+			b.check_deadblock(4);
+			return 0;
+		}*/
+
 		//Создаем объект шахматной доски как singleton-object
 		board &b = board::getInstance();
 	
@@ -97,7 +108,7 @@ void figure_thread_func(board::fig_index index)
 			const time_point start_time = std::chrono::high_resolution_clock::now();
 			const time_point until_time = start_time + milliseconds(5000);
 			
-			
+			bool do_not_wait = false;
 			while(true){
 				
 				{
@@ -108,9 +119,21 @@ void figure_thread_func(board::fig_index index)
 					blocked_fig_idx = b.try_to_move_to(index, destination_pos.x_,destination_pos.y_);
 					
 					//Запрашиваем номер хода, на котором находится блокирующая фигура
-					if(blocked_fig_idx < figures_count)
+					if(blocked_fig_idx < figures_count){
 						blocked_fig_turn = b.get_figure(blocked_fig_idx).get_turn();
+						
+						//Если блокирующая фигура завершила свои ходы - не ждем, а проверям нашу фигуру на dead-block
+						//По результатам проверки - или по экцепшену завершаем поток, или переходим на новую попытку сделать ход 
+						if(blocked_fig_turn >= turns_count){
+							b.check_deadblock(index,turns_count);
+							do_not_wait = true;
+						}
+					}
 				}
+
+
+				if(do_not_wait)
+					break;
 
 				//Если проход не был блокирован, переходим к следубщему ходу
 				if(blocked_fig_idx >= figures_count)
@@ -120,7 +143,9 @@ void figure_thread_func(board::fig_index index)
 				bool wait_result = b.wait_while_figure_make_turn(blocked_fig_idx, blocked_fig_turn, until_time);
 				
 				const time_point now_time = std::chrono::high_resolution_clock::now();
-				std::cout << "Fig " << index << " waked up " << std::chrono::duration_cast<milliseconds>(now_time - start_time).count() << "ms";
+				{	std::lock_guard lk(turn_mutex);
+					std::cout << "Fig " << index << " waked up " << std::chrono::duration_cast<milliseconds>(now_time - start_time).count() << "ms. ";
+				}
 
 				//Полученный результат false, если вышло время. Переходим к сле<дующему ходу (счетчик хода не увеличится)
 				if(!wait_result)
@@ -130,7 +155,9 @@ void figure_thread_func(board::fig_index index)
 					break;
 				}
 
-				std::cout << " waked up by Other Figure." << std::endl;
+				{	std::lock_guard lk(turn_mutex);
+					std::cout << " waked up by Other Figure." << std::endl;
+				}
 				//Если полученный результат был положительным, зановой пытаемся перемстить фигуру 
 			}
 		}

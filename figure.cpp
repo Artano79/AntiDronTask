@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <algorithm>
 
 #include "figure.h"
 
@@ -112,6 +113,34 @@ bool board::wait_while_figure_make_turn(fig_index idx, int turn, time_point tp)
 {
 	figure& f = figures_.at(idx);
 	return f.wait(turn,tp);
+}
+
+void board::check_deadblock(fig_index idx,int turns_count)
+{
+	figure& f = figures_.at(idx);
+	int x = f.get_x();
+	int y = f.get_y();
+
+	//Лямбда проверяет, что фигура g находится на одной вертикали с фигурой f и слева от нее
+	auto lambda_hor_left = [x,y,turns_count](const figure& g){return ((g.get_y() == y) && (g.get_x() == x - 1) && (g.get_turn() >= turns_count));};
+	
+	//..на одной горизонтали и справа
+	auto lambda_hor_right = [x,y,turns_count](const figure& g){return ((g.get_y() == y) && (g.get_x() == x + 1) && (g.get_turn() >= turns_count));};
+	
+	//на одной вертикали и сверху
+	auto lambda_ver_up = [x,y,turns_count](const figure& g){return ((g.get_x() == x) && (g.get_y() == y - 1) && (g.get_turn() >= turns_count));};
+	
+	//на ожной вертикали и снизу
+	auto lambda_ver_down = [x,y,turns_count](const figure& g){return ((g.get_x() == x) && (g.get_y() == y + 1) && (g.get_turn() >= turns_count));};
+		
+	if(x == 0 || std::find_if(begin(figures_), end(figures_), lambda_hor_left) != figures_.end())
+		if(x == 7 || std::find_if(begin(figures_), end(figures_), lambda_hor_right) != figures_.end())
+			if(y == 0 || std::find_if(begin(figures_), end(figures_), lambda_ver_up) != figures_.end())
+				if(y == 7 || std::find_if(begin(figures_), end(figures_), lambda_ver_down) != figures_.end())
+				{
+					f.set_turn(turns_count);
+					throw std::runtime_error("Figure in dead-block");
+				}
 }
 
 void board::print() const

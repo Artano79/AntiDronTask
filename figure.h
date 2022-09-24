@@ -29,6 +29,15 @@ namespace antidron_test_task
 			cv_.notify_all();
 		}
 
+		void set_turn(int turn) {
+			//когда фигура меняет свое положение она выставляет condition_variable
+			{
+				std::lock_guard lk(cv_m_);
+				turn_ = turn;
+			}
+			cv_.notify_all();
+		}
+
 		int get_x() const {return x_;}
 		int get_y() const {return y_;}
 		int get_turn() const {return turn_;}
@@ -86,6 +95,9 @@ namespace antidron_test_task
 
 		//Функция ожидания, когда фигура с индексом idx совершит ход с номером turn+1
 		bool wait_while_figure_make_turn(fig_index idx, int turn, time_point tp);
+
+		//Находится ли фигура в мертвом блоке?
+		void check_deadblock(fig_index idx,int turns_count);
 
 	private:
 		//Используем деку для хранения фигур, так как класс figure содержит condition_variable и mutex,
